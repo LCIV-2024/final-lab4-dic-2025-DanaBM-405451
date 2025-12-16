@@ -110,6 +110,24 @@ class ScoreboardServiceTest {
     @Test
     void testGetScoreboardByPlayer_Success() {
         // TODO: Implementar el test para testGetScoreboardByPlayer_Success
+
+        List<Game> player1Games = Arrays.asList(game1, game2, game3);
+
+        when(playerRepository.findById(1L)).thenReturn(java.util.Optional.of(player1));
+        when(gameRepository.findByJugador(player1)).thenReturn(player1Games);
+
+        ScoreboardDTO result = scoreboardService.getScoreboardByPlayer(1L);
+
+        assertNotNull(result);
+        assertEquals(1L, result.getIdJugador());
+        assertEquals("Juan Pérez", result.getNombreJugador());
+        assertEquals(45, result.getPuntajeTotal()); // 20 + 20 + 5 = 45
+        assertEquals(3L, result.getPartidasJugadas()); // 3 partidas totales
+        assertEquals(2L, result.getPartidasGanadas()); // 2 ganadas (game1, game2)
+        assertEquals(1L, result.getPartidasPerdidas()); // 1 perdida (game3)
+
+        verify(playerRepository, times(1)).findById(1L);
+        verify(gameRepository, times(1)).findByJugador(player1);
         
     }
 

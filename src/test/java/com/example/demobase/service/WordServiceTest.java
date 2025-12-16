@@ -39,6 +39,38 @@ class WordServiceTest {
     @Test
     void testGetAllWords() {
         // TODO: Implementar el test para getAllWords
+
+        // Given
+        List<Word> words = Arrays.asList(word1, word2, word3);
+        when(wordRepository.findAllOrdered()).thenReturn(words);
+
+
+        List<WordDTO> result = wordService.getAllWords();
+
+
+        assertNotNull(result);
+        assertEquals(3, result.size());
+
+
+        WordDTO wordDto1 = result.get(0);
+        assertEquals(1L, wordDto1.getId());
+        assertEquals("PROGRAMADOR", wordDto1.getPalabra());
+        assertTrue(wordDto1.getUtilizada());
+
+
+        WordDTO wordDto2 = result.get(1);
+        assertEquals(2L, wordDto2.getId());
+        assertEquals("COMPUTADORA", wordDto2.getPalabra());
+        assertFalse(wordDto2.getUtilizada());
+
+
+        WordDTO wordDto3 = result.get(2);
+        assertEquals(3L, wordDto3.getId());
+        assertEquals("TECNOLOGIA", wordDto3.getPalabra());
+        assertFalse(wordDto3.getUtilizada());
+
+        
+        verify(wordRepository, times(1)).findAllOrdered();
         
     }
 
