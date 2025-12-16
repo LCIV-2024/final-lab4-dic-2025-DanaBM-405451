@@ -13,3 +13,4 @@ public class DemobaseApplication {
 }
  //Porque chucha no andaaaaaaaaa
 //Me cacho en docker y java, nunca anda >:(
+//Tengo la red de MySQL ocupada por el trabajo 
