@@ -69,7 +69,7 @@ class WordServiceTest {
         assertEquals("TECNOLOGIA", wordDto3.getPalabra());
         assertFalse(wordDto3.getUtilizada());
 
-        
+
         verify(wordRepository, times(1)).findAllOrdered();
         
     }
@@ -77,6 +77,20 @@ class WordServiceTest {
     @Test
     void testGetAllWords_EmptyList() {
         // TODO: Implementar el test para getAllWords_EmptyList
+
+        List<Word> emptyList = Arrays.asList();
+        when(wordRepository.findAllOrdered()).thenReturn(emptyList);
+
+
+        List<WordDTO> result = wordService.getAllWords();
+
+
+        assertNotNull(result);
+        assertEquals(0, result.size());
+        assertTrue(result.isEmpty());
+
+
+        verify(wordRepository, times(1)).findAllOrdered();
         
     }
 }
