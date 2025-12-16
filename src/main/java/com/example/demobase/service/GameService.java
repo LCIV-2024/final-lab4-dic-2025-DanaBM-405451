@@ -35,22 +35,20 @@ public class GameService {
     public GameResponseDTO startGame(Long playerId) {
         GameResponseDTO response = new GameResponseDTO();
         // TODO: Implementar el método startGame
-        // Validar que el jugador existe
+        //  Validar que el jugador existe
         Player player = playerRepository.findById(playerId)
                 .orElseThrow(() -> new RuntimeException("Jugador no encontrado con ID: " + playerId));
 
-        //  Buscar palabras no utilizadas
-        List<Word> palabrasDisponibles = wordRepository.findAll();
+        //  Buscar una palabra aleatoria no utilizada usando el método del repositorio
+        Optional<Word> palabraOpcional = wordRepository.findRandomWord();
 
-        if (palabrasDisponibles.isEmpty()) {
+        if (palabraOpcional.isEmpty()) {
             throw new RuntimeException("No hay palabras disponibles para jugar");
         }
 
-        // 3. Seleccionar una palabra aleatoria
-        Random random = new Random();
-        Word palabraSeleccionada = palabrasDisponibles.get(random.nextInt(palabrasDisponibles.size()));
+        Word palabraSeleccionada = palabraOpcional.get();
 
-        // 4. Verificar si ya existe una partida en curso para este jugador con esta palabra
+        //  Verificar si ya existe una partida en curso para este jugador con esta palabra
         Optional<GameInProgress> partidaExistente = gameInProgressRepository
                 .findByJugadorAndPalabra(playerId, palabraSeleccionada.getId());
 
@@ -63,7 +61,7 @@ public class GameService {
         palabraSeleccionada.setUtilizada(true);
         wordRepository.save(palabraSeleccionada);
 
-        //  Crear nueva partida en curso
+        // Crear nueva partida en curso
         GameInProgress nuevaPartida = new GameInProgress();
         nuevaPartida.setJugador(player);
         nuevaPartida.setPalabra(palabraSeleccionada);
@@ -89,24 +87,23 @@ public class GameService {
     public GameResponseDTO makeGuess(Long playerId, Character letra) {
         GameResponseDTO response = new GameResponseDTO();
         // TODO: Implementar el método makeGuess
-        // Validar que el jugador existe
+        //Validar que el jugador existe
         Player player = playerRepository.findById(playerId)
                 .orElseThrow(() -> new RuntimeException("Jugador no encontrado con ID: " + playerId));
 
         //  Convertir la letra a mayúscula
         Character letraMayuscula = Character.toUpperCase(letra);
 
-        //  Buscar la partida en curso más reciente del jugador
-        List<GameInProgress> partidasEnCurso = gameInProgressRepository.findByJugadorIdOrderByFechaInicioDesc(playerId);
+        //  Buscar la partida en curso más reciente del jugador (ordenada por fecha descendente)
+        List<GameInProgress> partidasEnCurso = gameInProgressRepository
+                .findByJugadorIdOrderByFechaInicioDesc(playerId);
 
         if (partidasEnCurso.isEmpty()) {
             throw new RuntimeException("No hay partida en curso para este jugador. Inicia una nueva con /api/games/start/" + playerId);
         }
 
-        //  Tomar la partida más reciente (ordenada por fecha descendente)
-        GameInProgress partidaActual = partidasEnCurso.stream()
-                .max(Comparator.comparing(GameInProgress::getFechaInicio))
-                .orElseThrow(() -> new RuntimeException("Error al obtener la partida en curso"));
+        //  Tomar la partida más reciente (la primera de la lista ya está ordenada DESC)
+        GameInProgress partidaActual = partidasEnCurso.get(0);
 
         //  Obtener letras ya intentadas
         Set<Character> letrasIntentadas = stringToCharSet(partidaActual.getLetrasIntentadas());
@@ -117,14 +114,14 @@ public class GameService {
             return buildResponseFromGameInProgress(partidaActual);
         }
 
-        // Agregar la nueva letra
+        //  Agregar la nueva letra
         letrasIntentadas.add(letraMayuscula);
 
-        //  Verificar si la letra está en la palabra
+        // Verificar si la letra está en la palabra
         String palabraCompleta = partidaActual.getPalabra().getPalabra().toUpperCase();
         boolean letraCorrecta = palabraCompleta.indexOf(letraMayuscula) >= 0;
 
-        //  Decrementar intentos solo si la letra es incorrecta
+
         if (!letraCorrecta) {
             partidaActual.setIntentosRestantes(partidaActual.getIntentosRestantes() - 1);
         }
@@ -136,7 +133,7 @@ public class GameService {
         String palabraOculta = generateHiddenWord(palabraCompleta, letrasIntentadas);
         boolean esPalabraCompleta = palabraOculta.equals(palabraCompleta);
 
-        // Guardar el estado actualizado
+        //  Guardar el estado actualizado
         gameInProgressRepository.save(partidaActual);
 
         //  Verificar si el juego terminó

@@ -21,6 +21,6 @@ public interface WordRepository extends JpaRepository<Word, Long> {
 
     List<Word> palabra(String palabra);
 
-    List<Word> palabra(String palabra);
+
 }
 
